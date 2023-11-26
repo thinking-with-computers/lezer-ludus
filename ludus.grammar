@@ -1,10 +1,20 @@
-@top File { (Identifier | Number | String)+ }
+@top Script { terminator* line+ }
 
-@skip { space }
+@skip { space | comment }
+
+line { expression terminator+ }
+
+expression { Boolean | Nil | String | Number }
 
 @tokens {
-  space { @whitespace+ }
-  Identifier { $[A-Za-z_]+ }
-  Number { $[0-9]+ }
-  String { '"' !["]* '"' }
+	space { $[ \t\r]+ }
+	comment { "&" ![\n]* }
+	Boolean { "true" | "false" }
+	Nil { "nil" }
+	String { '"' (!["\\] | "\\" _)* '"' }
+	int { $[1-9]$[0-9]* }
+	float { ("0" | int ) $[0.9]+}
+	Number { int | float }
+	separator { $[,\n] }
+	terminator { $[;\n] }
 }
