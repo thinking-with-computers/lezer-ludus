@@ -1,0 +1,18 @@
+{
+  "name": "lezer-ludus",
+  "version": "0.1.0",
+  "description": "A lezer grammar for Ludus.",
+  "type": "module",
+  "main": "parser.js",
+  "devDependencies": {
+    "@lezer/generator": "^1.0.0"
+  },
+  "dependencies": {
+    "@lezer/lr": "^1.0.0"
+  },
+  "scripts": {
+    "prepare": "lezer-generator src/my.grammar -o src/parser.js"
+  },
+  "author": "Scott Richmond",
+  "license": "MIT"
+}
