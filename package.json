@@ -11,7 +11,7 @@
     "@lezer/lr": "^1.0.0"
   },
   "scripts": {
-    "prepare": "lezer-generator src/my.grammar -o src/parser.js"
+    "prepare": "lezer-generator ludus.grammar -o parser.js"
   },
   "author": "Scott Richmond",
   "license": "MIT"
