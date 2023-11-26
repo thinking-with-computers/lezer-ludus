@@ -2,19 +2,321 @@
 
 @skip { space | comment }
 
-line { expression terminator+ }
+line { (expression | toplevel) terminator+ }
 
-expression { Boolean | Nil | String | Number }
+toplevel {
+	Import
+	| Use
+	| Ns
+}
+
+Import {
+	skw<"import">
+	String
+	skw<"as">
+	Word
+}
+
+Use { skw<"use"> Word }
+
+Ns {
+	skw<"ns"> Word "{"
+	separator*
+	assoc_term (separator+ assoc_term)*
+	separator*
+	"}"
+}
+
+expression { non_binding | binding }
+
+binding { Let | Ref | Fn_Named | Fn_Compound }
+
+Ref { skw<"ref"> Word "=" expression }
+
+non_binding { simple | complex }
+
+synth_root { Word | Keyword }
+
+synth_term { Args | Keyword }
+
+arg_term { Placeholder | expression }
+
+Args {
+	("(" separator* ")")
+	| ("("
+	separator*
+	arg_term (separator+ arg_term)*
+	separator*
+	")")
+}
+
+Synthetic { synth_root synth_term+ }
+
+complex {
+	Block
+	| If
+	| If_Let
+	| Match
+	| When
+	//| Do
+	//| Bind
+	| Loop
+	| Repeat
+	| Each
+}
+
+Repeat { skw<"repeat"> (Word | Number) Block }
+
+Each { skw<"each"> simple "do" (Fn_Clause | Fn_Clauses) }
+
+Recur { skw<"recur"> Args }
+
+Loop { skw<"loop"> simple "with" (Fn_Clause | Fn_Clauses) }
+
+simple { atom | collection | Synthetic | Fn_Lambda | Recur }
+
+Fn_Clause { Tuple_Pattern "->" non_binding }
+
+Fn_Clauses { 
+	"{"
+	terminator*
+	Fn_Clause (terminator+ Fn_Clause)*
+	terminator*
+	"}"
+}
+
+Fn_Compound { skw<"fn"> Word Fn_Clauses }
+
+Fn_Named {
+	skw<"fn"> Word Fn_Clause
+}
+
+Fn_Lambda { skw<"fn"> Fn_Clause }
+
+// TODO: figure out precedence with do/bind exprs
+// do_expr { Fn_Lambda | Synthetic | Word | Keyword }
+
+// Do {
+// 	skw<"do"> simple (~ambig newline* ">" do_expr)+
+// }
+
+// Bind {
+// 	skw<"bind">
+// 	simple
+// 	(!pipeline pipeline)+
+// }
+
+Pattern {
+	Tuple_Pattern
+	| List_Pattern
+	| Dict_Pattern
+	| Struct_Pattern
+	| atom
+	| Placeholder
+}
+
+Placeholder { "_" }
+
+ellipsis { "..." }
+
+Splattern { ellipsis (Word | Placeholder) }
+
+Tuple_Pattern {
+	("(" separator* ")")
+	| ("("
+	separator*
+	(Pattern separator+)* (Pattern | Splattern)
+	separator*
+	")")
+}
+
+List_Pattern {
+	("[" separator* "]")
+	| ("["
+	separator*
+	(Pattern separator+)* (Pattern | Splattern)
+	separator*
+	"]")
+}
+
+Assoc_Pattern {
+	Word
+	| (Keyword Pattern)
+}
+
+Dict_Pattern {
+	("#{" separator* "}")
+	| ("#{"
+	separator*
+	(Assoc_Pattern separator+)* (Assoc_Pattern | Splattern)
+	separator*
+	"}")
+}
+
+Struct_Pattern {
+	("@{" separator* "}")
+	| ("@{"
+	separator*
+	(Assoc_Pattern separator+)* (Assoc_Pattern | Splattern)
+	separator*
+	"}")
+}
+
+Let {
+	skw<"let">
+	Pattern
+	"="
+	non_binding
+}
+
+Else { skw<"else"> }
+
+Match_Clause {(Pattern | Else) "->" newline* expression}
+
+match_body {
+	Match_Clause
+	| (
+		"{"
+		terminator*
+		Match_Clause (terminator+ Match_Clause)*
+		terminator*
+		"}"
+	)
+}
+
+Match {
+	skw<"match">
+	simple
+	skw<"with">
+	match_body
+}
+
+When_Clause {
+	(simple | Placeholder | Else) "->" newline* expression
+}
+
+When {
+	skw<"when"> "{"
+	terminator*
+	When_Clause (terminator+ When_Clause)*
+	terminator*
+	"}"
+}
+
+If {
+	skw<"if"> simple newline*
+	skw<"then"> expression ~ambig newline*
+	skw<"else"> expression
+}
+
+If_Let {
+	skw<"if"> skw<"let">
+	Pattern "=" simple
+	skw<"then"> expression newline*
+	skw<"else"> expression
+}
+
+Block {
+	"{"
+	terminator*
+	expression (terminator+ expression)*
+	terminator*
+	"}"
+}
+
+collection {
+	Tuple
+	| List
+	| Set
+	| Dict
+	| Struct
+}
+
+Tuple {
+	( "(" // non-empty
+		separator*
+		non_binding (separator+ non_binding)*
+		separator*
+		")" )
+	| "(" separator* ")" // empty
+}
+
+Splat { ellipsis Word }
+
+linear_term { Splat | non_binding }
+
+List {
+	("["
+		separator*
+		linear_term (separator+ linear_term)*
+		separator*
+		"]" )
+	| "[" separator* "]"
+}
+
+Set {
+	("${"
+	separator*
+	linear_term (separator+ linear_term)*
+	separator*
+	"}")
+	| "${" separator* "}"
+}
+
+assoc_term {
+	Word
+	| (Keyword non_binding)
+}
+
+dict_term {
+	assoc_term
+	| Splat
+}
+
+Dict {
+	("#{"
+		separator*
+		dict_term (separator+ dict_term)*
+		separator*
+		"}" ) 
+	| "#{" separator* "}"
+}
+
+Struct {
+	("@{"
+		separator*
+		assoc_term (separator+ assoc_term)*
+		separator*
+		"}")
+	| "@{" separator* "}"
+}
+
+atom { Boolean | Nil | String | Number | Keyword | Word }
+
+kw<term> { @specialize[@name={term}]<Word, term> }
+
+skw<term> { @specialize<Word, term> }
+
+Keyword { ":" Word }
+
+Boolean {
+	kw<"true">
+	| kw<"false">
+}
+
+Nil {
+	skw<"nil">
+}
 
 @tokens {
+	Word { $[a-z] $[a-zA-Z_\-?/!]* }
 	space { $[ \t\r]+ }
 	comment { "&" ![\n]* }
-	Boolean { "true" | "false" }
-	Nil { "nil" }
 	String { '"' (!["\\] | "\\" _)* '"' }
-	int { $[1-9]$[0-9]* }
-	float { ("0" | int ) $[0.9]+}
-	Number { int | float }
+	int { $[1-9]$[0-9]* | "0" }
+	float { ("0" | int ) "." $[0-9]+}
+	Number { "-"? (int | float) }
 	separator { $[,\n] }
 	terminator { $[;\n] }
+	newline { "\n" }
 }
