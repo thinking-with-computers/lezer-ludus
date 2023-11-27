@@ -192,7 +192,7 @@ If {
 
 If_Let {
 	skw<"if"> skw<"let">
-	Pattern "=" simple
+	Pattern "=" simple newline*
 	skw<"then"> expression newline*
 	skw<"else"> expression
 }
@@ -287,6 +287,6 @@ Nil { skw<"nil"> }
 	float { ("0" | int ) "." $[0-9]+}
 	Number { "-"? (int | float) }
 	separator { $[,\n] }
-	terminator { $[;\n] }
+	terminator { $[;\n] | @eof }
 	newline { "\n" }
 }
