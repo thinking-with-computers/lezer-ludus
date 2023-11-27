@@ -268,13 +268,13 @@ Struct {
 
 atom { Boolean | Nil | String | Number | Keyword | Word }
 
-keyword<term> { @specialize[@name={term}]<Word, term> }
+reserved<term> { @specialize[@name={term}]<Word, term> }
 
 silent<term> { @specialize<Word, term> }
 
 Keyword { ":" Word }
 
-Boolean { keyword<"true"> | keyword<"false"> }
+Boolean { reserved<"true"> | reserved<"false"> }
 
 Nil { silent<"nil"> }
 
