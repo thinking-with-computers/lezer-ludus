@@ -4,18 +4,9 @@
 
 line { (expression | toplevel) terminator+ }
 
-toplevel {
-	Import
-	| Use
-	| Ns
-}
+toplevel { Import | Use | Ns }
 
-Import {
-	skw<"import">
-	String
-	skw<"as">
-	Word
-}
+Import { skw<"import"> String skw<"as"> Word }
 
 Use { skw<"use"> Word }
 
@@ -39,7 +30,7 @@ synth_root { Word | Keyword }
 
 synth_term { Args | Keyword }
 
-arg_term { Placeholder | expression }
+arg_term { Placeholder | simple }
 
 Args {
 	("(" separator* ")")
@@ -87,9 +78,7 @@ Fn_Clauses {
 
 Fn_Compound { skw<"fn"> Word Fn_Clauses }
 
-Fn_Named {
-	skw<"fn"> Word Fn_Clause
-}
+Fn_Named { skw<"fn"> Word Fn_Clause }
 
 Fn_Lambda { skw<"fn"> Fn_Clause }
 
@@ -139,10 +128,7 @@ List_Pattern {
 	"]")
 }
 
-Assoc_Pattern {
-	Word
-	| (Keyword Pattern)
-}
+Assoc_Pattern { Word | (Keyword Pattern) }
 
 Dict_Pattern {
 	("#{" separator* "}")
@@ -162,12 +148,7 @@ Struct_Pattern {
 	"}")
 }
 
-Let {
-	skw<"let">
-	Pattern
-	"="
-	non_binding
-}
+Let { skw<"let"> Pattern "=" non_binding }
 
 Else { skw<"else"> }
 
@@ -205,7 +186,7 @@ When {
 
 If {
 	skw<"if"> simple newline*
-	skw<"then"> expression ~ambig newline*
+	skw<"then"> expression newline*
 	skw<"else"> expression
 }
 
@@ -263,15 +244,9 @@ Set {
 	| "${" separator* "}"
 }
 
-assoc_term {
-	Word
-	| (Keyword non_binding)
-}
+assoc_term { Word | (Keyword non_binding) }
 
-dict_term {
-	assoc_term
-	| Splat
-}
+dict_term { assoc_term | Splat }
 
 Dict {
 	("#{"
@@ -299,14 +274,9 @@ skw<term> { @specialize<Word, term> }
 
 Keyword { ":" Word }
 
-Boolean {
-	kw<"true">
-	| kw<"false">
-}
+Boolean { kw<"true"> | kw<"false"> }
 
-Nil {
-	skw<"nil">
-}
+Nil { skw<"nil"> }
 
 @tokens {
 	Word { $[a-z] $[a-zA-Z_\-?/!]* }
